@@ -1,3 +1,18 @@
+.DS_Store
+.vscode/
+**.terraform/
+**.terraform.lock.*
+**.tfstate
+**.tfstate.*
+data/
+credentials/
+*.csv
+*.xlsx
+.env
+logs/
+__pycache__/
+.history
+.ipynb_checkpoints/
 
 target/
 logs/
