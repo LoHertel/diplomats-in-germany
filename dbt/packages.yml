@@ -1,0 +1,4 @@
+packages:
+  - package: Datavault-UK/dbtvault
+    version: 0.8.2
+# run "dbt deps" to install package in dbt_packages
