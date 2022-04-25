@@ -59,15 +59,17 @@ x-airflow-common:
     AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
-    AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: "google-cloud-platform://?extra__google_cloud_platform__key_path=${GOOGLE_APPLICATION_CREDENTIALS}"
+    AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: ${AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT}
     GCP_PROJECT_ID: "${GCP_PROJECT_ID}"
     GCP_GCS_BUCKET: "${GCP_GCS_BUCKET}"
+    GCP_LOCATION: "${GCP_LOCATION}"
 
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
-    - ~/.config/gcloud/:/.google/credentials:ro
+    - ../dbt:/opt/airflow/dbt
+    - ../credentials:/.google/credentials:ro
 
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:

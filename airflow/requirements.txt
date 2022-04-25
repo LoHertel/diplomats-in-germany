@@ -1,5 +1,5 @@
 apache-airflow-providers-google
 pandas
-pdfplumber
 pyarrow
+pdfplumber
 dbt-bigquery

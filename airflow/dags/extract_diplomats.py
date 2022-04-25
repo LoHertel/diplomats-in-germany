@@ -49,7 +49,7 @@ class ExtractDiplomats():
 
             if line.startswith('Stand:'):
                 line = line.strip('Stand: ')
-                locale.setlocale(locale.LC_TIME, "de_DE") 
+                locale.setlocale(locale.LC_TIME, "de_DE.UTF-8") 
                 date: datetime.date = datetime.strptime(line, '%d. %B %Y').date()
 
                 return date
