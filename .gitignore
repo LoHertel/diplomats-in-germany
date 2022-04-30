@@ -1,18 +1,27 @@
+# mac
 .DS_Store
+
+# ide
 .vscode/
+.ipynb_checkpoints/
+
+# python
+__pycache__/
+.history
+
+# terraform
 **.terraform/
 **.terraform.lock.*
 **.tfstate
 **.tfstate.*
+
+# repo data
 data/
 credentials/
-*.csv
-*.xlsx
 .env
-logs/
-__pycache__/
-.history
-.ipynb_checkpoints/
+*.xlsx
+
+# dbt
+.user.yml
 target/
 logs/
-.user.yml
