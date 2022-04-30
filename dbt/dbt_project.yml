@@ -26,6 +26,8 @@ clean-targets:         # directories to be removed by `dbt clean`
 
 models:
   diplomats_in_germany: 
+    datamart:
+      +schema: datamart
     raw_datavault:
       +schema: raw_datavault
     staging:
