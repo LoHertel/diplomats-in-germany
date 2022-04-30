@@ -5,3 +5,4 @@ sources:
       schema: staging
       tables:
         - name: diplomats
+          identifier: diplomats_all

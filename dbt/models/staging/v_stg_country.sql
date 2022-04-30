@@ -5,8 +5,8 @@ source_model: "countries"
 derived_columns:
   SOURCE: "!CSV"
   LOAD_DATETIME: "CURRENT_DATETIME()"
+  EFFECTIVE_FROM: "CURRENT_DATETIME()"
 hashed_columns:
-  COUNTRY_HK: "ISO_3166_1_alpha2"
   COUNTRY_NAME_HK: "name_DE"
   COUNTRY_HASHDIFF:
     is_hashdiff: true
@@ -15,7 +15,6 @@ hashed_columns:
       - "ISO_3166_1_alpha3"
       - "name_EN"
       - "full_name_EN"
-      - "name_DE"
       - "full_name_DE"
 {%- endset -%}
 

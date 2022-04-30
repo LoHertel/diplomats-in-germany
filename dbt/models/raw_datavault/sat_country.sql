@@ -3,19 +3,17 @@
 ) }}
 
 {%- set yaml_metadata -%}
-source_model: "v_stg_diplomat"
-src_pk: "DIPLOMAT_HK"
+source_model: "v_stg_country"
+src_pk: "COUNTRY_NAME_HK"
 src_hashdiff: 
-  source_column: "DIPLOMAT_HASHDIFF"
-  alias: "HASHDIFF"
+    source_column: "COUNTRY_HASHDIFF"
+    alias: "HASHDIFF"
 src_payload:
-  - "title"
-  - "gender"
-  - "position_name"
-  - "order"
-  - "partner_gender"
-  - "partner_name"
-  - "country_long"
+    - "ISO_3166_1_alpha2"
+    - "ISO_3166_1_alpha3"
+    - "name_EN"
+    - "full_name_EN"
+    - "full_name_DE"
 src_eff: "EFFECTIVE_FROM"
 src_ldts: "LOAD_DATETIME"
 src_source: "SOURCE"
