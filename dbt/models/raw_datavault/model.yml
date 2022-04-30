@@ -1,0 +1,6 @@
+version: 2
+
+models:
+  - name: hub_diplomat
+    description: >
+      Hub in the raw data vault for the extracted data from the pdf files.

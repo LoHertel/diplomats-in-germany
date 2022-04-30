@@ -2,10 +2,10 @@
       materialized='incremental'
 ) }}
 
-{%- set source_model = "v_stg_diplomat"   -%}
+{%- set source_model = "v_stg_country"   -%}
 
-{%- set src_pk = "DIPLOMAT_HK"             -%}
-{%- set src_nk = ["name", "country", "date_since"]       -%}
+{%- set src_pk = "COUNTRY_NAME_HK"             -%}
+{%- set src_nk = ["name_DE"]       -%}
 {%- set src_ldts = "LOAD_DATETIME"         -%}
 {%- set src_source = "SOURCE"              -%}
 

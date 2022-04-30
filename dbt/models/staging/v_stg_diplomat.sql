@@ -13,30 +13,28 @@ hashed_columns:
   DIPLOMAT_HK:
     - "name"
     - "country"
+    - "date_since"
   PARTNER_HK:
     - "name"
     - "country"
+    - "date_since"
     - "partner_name"
   COUNTRY_NAME_HK: "country"
+  DIPLOMAT_COUNTRY_HK:
+    - "name"
+    - "country"
+    - "date_since"
   DIPLOMAT_HASHDIFF:
     is_hashdiff: true
     columns:
       - "title"
       - "gender"
-      - "name"
       - "position_name"
-      - "date_since"
       - "order"
-      - "country"
-      - "country_long"
-      - "date"
-  PARTNER_HASHDIFF:
-    is_hashdiff: true
-    columns:
-      - "name"
       - "partner_gender"
       - "partner_name"
-      - "country"
+      - "country_long"
+      - "date"
 {%- endset -%}
 
 {% set metadata_dict = fromyaml(yaml_metadata) %}
