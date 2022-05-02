@@ -53,6 +53,17 @@ WITH source_diplomat_hub AS (
         ON diplomat.DIPLOMAT_HK = link.DIPLOMAT_HK
     LEFT JOIN source_country_sat AS country
         ON link.COUNTRY_NAME_HK = country.COUNTRY_NAME_HK
+    GROUP BY diplomat.DIPLOMAT_HK
+            ,diplomat.title
+            ,diplomat.gender
+            ,diplomat.name
+            ,diplomat.position_name
+            ,diplomat.order
+            ,diplomat.partner_gender
+            ,diplomat.partner_name
+            ,diplomat.date_since
+            ,country.ISO_3166_1_alpha2
+            ,diplomat.publication_date
 )
 , source_diplomat_match AS (
     SELECT * 
