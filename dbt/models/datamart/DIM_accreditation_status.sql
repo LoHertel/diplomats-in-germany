@@ -7,13 +7,14 @@ WITH source_publication_date AS (
           ,{{ adapter.quote('rank') }} AS rnk
           ,{{ adapter.quote('max') }} AS mx
     FROM {{ ref('DIM_publication_date') }}
-),
-source_diplomats AS (
+)
+, source_diplomats AS (
     SELECT DIPLOMAT_HK
           ,publication_date
+          ,date_since
     FROM {{ ref('DIM_diplomat') }} 
-),
-grouped AS (
+)
+, grouped AS (
     SELECT * 
         -- grouping sequential numbers of rank into an interval (business meaning: a complete timespan in which the diplomat was stationed in Germany)
         ,dt.rnk - ROW_NUMBER() OVER(PARTITION BY dip.DIPLOMAT_HK ORDER BY dt.dte) AS grp
@@ -28,5 +29,6 @@ SELECT DIPLOMAT_HK
             -- mark last date of interval with status 'leave' unless it is the first available date in the dataset (in this we don't know if a diplomat came on that point of time)
             WHEN rnk < mx AND NULLIF(grp < LEAD(grp) OVER(PARTITION BY DIPLOMAT_HK ORDER BY rnk), TRUE) IS NULL THEN 'end'
             ELSE 'continue' END AS accreditation_status
+     ,date_since
 FROM grouped
 ORDER BY DIPLOMAT_HK, rnk
