@@ -4,6 +4,7 @@ from typing import Dict
 
 from airflow import DAG
 from airflow.utils.dates import days_ago
+from airflow.utils.task_group import TaskGroup
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator, ShortCircuitOperator
 from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesystemToGCSOperator
@@ -100,68 +101,80 @@ with DAG(
     is_paused_upon_creation=True,
 ) as dag:
 
-    download_pdf_task = BashOperator(
-        task_id='download_pdf',
-        do_xcom_push=False,
-        bash_command=f'curl -sSLf -o {TARGET_FILE} --create-dirs {URL_FULL} && ls -la /opt/airflow/pdf'
-        # -sS: silent, but shows errors
-        # -L: follow HTTP/S redirects
-        # -f: fail when resource is not available (404 error)
-        # -o: output path
-        # --create-dirs: create missing folders in the output path
-    )
+    with TaskGroup(group_id='Extract') as extract_group:
 
-    check_download_task = ShortCircuitOperator(
-        task_id="check_download",
-        do_xcom_push=False,
-        python_callable=check_download,
-        op_kwargs={
-            "pdf_file": TARGET_FILE,
-            "bucket_name": GCS_BUCKET,
-        },
-    )
+        download_pdf_task = BashOperator(
+            task_id='download_pdf',
+            do_xcom_push=False,
+            bash_command=f'curl -sSLf -o {TARGET_FILE} --create-dirs {URL_FULL} && ls -la /opt/airflow/pdf',
+            # -sS: silent, but shows errors
+            # -L: follow HTTP/S redirects
+            # -f: fail when resource is not available (404 error)
+            # -o: output path
+            # --create-dirs: create missing folders in the output path
+            doc='Download PDF with list of diplomats from Germany Ministry of Foreign Affairs'
+        )
 
-    extract_data_task = PythonOperator(
-        task_id="extract_data",
-        python_callable=extract_data,
-        op_kwargs={
-            "pdf_file": TARGET_FILE,
-            "target_folder": os.path.join(AIRFLOW_HOME, "data")
-        },
-    )
+        check_download_task = ShortCircuitOperator(
+            task_id="check_download",
+            do_xcom_push=False,
+            python_callable=check_download,
+            op_kwargs={
+                "pdf_file": TARGET_FILE,
+                "bucket_name": GCS_BUCKET,
+            },
+        )
+    
+        extract_data_task = PythonOperator(
+            task_id="extract_data",
+            python_callable=extract_data,
+            op_kwargs={
+                "pdf_file": TARGET_FILE,
+                "target_folder": os.path.join(AIRFLOW_HOME, "data")
+            },
+        )
 
-    upload_pdf_to_gcs_task = LocalFilesystemToGCSOperator(
-        task_id="upload_pdf_to_gcs",
-        src=TARGET_FILE,
-        dst="pdf/{{ ti.xcom_pull(task_ids='check_download', key='pdf_date') }}_data.pdf",
-        mime_type="application/pdf",
-        bucket=GCS_BUCKET,
-    )
-
-    upload_pq_to_gcs_task = LocalFilesystemToGCSOperator(
-        task_id="upload_pq_to_gcs",
-        src=os.path.join(AIRFLOW_HOME, "{{ ti.xcom_pull(task_ids='check_download', key='blob_name') }}"),
-        dst="{{ ti.xcom_pull(task_ids='check_download', key='blob_name') }}",
-        bucket=GCS_BUCKET,
-    )
-
-    load_data_to_bq_task = GCSToBigQueryOperator(
-        task_id="load_data_to_bq",
-        bucket=GCS_BUCKET,
-        source_objects="{{ ti.xcom_pull(task_ids='check_download', key='blob_name') }}",
-        destination_project_dataset_table=f"{PROJECT_ID}:{BQ_DATASET}.{BQ_TABLE}",
-        source_format="PARQUET",
-        autodetect=True,
-        create_disposition="CREATE_IF_NEEDED",
-        write_disposition="WRITE_TRUNCATE",
-    )
-
-    dbt_run_task = BashOperator(
-        task_id="dbt_run",
-        do_xcom_push=False,
-        bash_command=f"cd {os.path.join(AIRFLOW_HOME, 'dbt')} && dbt run",
-    )
+        download_pdf_task >> check_download_task >> extract_data_task
 
 
-    download_pdf_task >> check_download_task >> extract_data_task >> [upload_pdf_to_gcs_task, upload_pq_to_gcs_task] 
-    upload_pq_to_gcs_task >> load_data_to_bq_task >> dbt_run_task
+    with TaskGroup(group_id='Load') as load_group:
+
+        upload_pdf_to_gcs_task = LocalFilesystemToGCSOperator(
+            task_id="upload_pdf_to_gcs",
+            src=TARGET_FILE,
+            dst="pdf/{{ ti.xcom_pull(task_ids='check_download', key='pdf_date') }}_data.pdf",
+            mime_type="application/pdf",
+            bucket=GCS_BUCKET,
+        )
+
+        upload_pq_to_gcs_task = LocalFilesystemToGCSOperator(
+            task_id="upload_pq_to_gcs",
+            src=os.path.join(AIRFLOW_HOME, "{{ ti.xcom_pull(task_ids='check_download', key='blob_name') }}"),
+            dst="{{ ti.xcom_pull(task_ids='check_download', key='blob_name') }}",
+            bucket=GCS_BUCKET,
+        )
+
+        load_data_to_bq_task = GCSToBigQueryOperator(
+            task_id="load_data_to_bq",
+            bucket=GCS_BUCKET,
+            source_objects="{{ ti.xcom_pull(task_ids='check_download', key='blob_name') }}",
+            destination_project_dataset_table=f"{PROJECT_ID}:{BQ_DATASET}.{BQ_TABLE}",
+            source_format="PARQUET",
+            autodetect=True,
+            create_disposition="CREATE_IF_NEEDED",
+            write_disposition="WRITE_TRUNCATE",
+        )
+
+        upload_pq_to_gcs_task >> load_data_to_bq_task
+
+
+    with TaskGroup(group_id='Transform') as transform_group:
+
+        dbt_run_task = BashOperator(
+            task_id="dbt_run",
+            do_xcom_push=False,
+            bash_command=f"cd {os.path.join(AIRFLOW_HOME, 'dbt')} && dbt run",
+        )
+    
+
+    extract_group >> load_group >>  transform_group
