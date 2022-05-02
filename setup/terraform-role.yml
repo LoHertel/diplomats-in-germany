@@ -1,0 +1,8 @@
+title: terraform
+description: "Role for Terraform Service Account."
+stage: "GA"
+includedPermissions:
+- bigquery.dataOwner
+- storage.admin
+- compute.admin
+
