@@ -1,6 +1,6 @@
+> **Small update**: The infrastructure image was wrong and I had to redact text in the markdown docs. And there was an error in the terraform `main.tf` file. No other changes were made. You can check the [last commit](https://github.com/LoHertel/diplomats-in-germany/commits/main).
+
 # Diplomats in Germany
-
-
 
 The German ministry of foreign affairs (Auswärtiges Amt) regularly updates a list of all foreign diplomatic missions and their diplomats, which are accredited by the Federal Republic of Germany.
 
@@ -34,7 +34,7 @@ The following tools and technologies were used:
 - Data Warehouse - [**BigQuery**](https://cloud.google.com/bigquery)
 - Data Visualization - [**Data Studio**](https://datastudio.google.com/overview)
 
-![infrastructure diagram](https://www.lorenz-hertel.net/arch_1.jpg "Infrastructure")
+![infrastructure diagram](https://www.lorenz-hertel.net/arch.jpg "Infrastructure")
 
 ## Dashboard
 
@@ -52,14 +52,13 @@ I have created interactive instructions to guide you through the setup process.
 [![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://console.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/LoHertel/diplomats-in-germany&cloudshell_tutorial=project-walkthrough.md)
 
 By clicking the button, the Google Cloud Shell Editor will open and ask for your authorization to clone this repository.  
-The interactive walkthrough for the project will be displayed on the right side of the Cloud Shell Editor.
+The interactive walkthrough for the project will be displayed on the right side of the Cloud Shell Editor.  
+*There might be an error message showing up, that third party cookies are needed. You can allow third party cookies for the Cloud Shell Editor. For [more information see here](https://cloud.google.com/code/docs/shell/limitations#private_browsing_and_disabled_third-party_cookies).*
 
-***
-***Note:** If you have closed the walkthrough and want to reopen it, run the following command in the cloudshell terminal window:*
-```sh
-cloudshell launch-tutorial setup-instructions.md
-```
-***
+> ***Note:** If you have closed the walkthrough and want to reopen it, run the following command in the cloudshell terminal window:*
+> ```sh
+> cd ~/cloudshell_open/diplomats-in-germany && cloudshell launch-tutorial project-walkthrough.md
+> ```
 
 If you don't want to use Cloud Shell Editor you could go through the instructions manually: [Open Instructions](project-walkthrough.md)
 

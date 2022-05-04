@@ -33,9 +33,10 @@ resource "google_storage_bucket" "data-lake-bucket" {
 # BigQuery DWH
 # Ref: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_dataset
 resource "google_bigquery_dataset" "datasets" {
-  for_each    = var.bq_datasets
+  for_each    = toset(var.bq_datasets)
   dataset_id  = each.value
   location    = var.region
+  delete_contents_on_destroy = true
 } 
 
 # Airflow Docker Host
