@@ -1,5 +1,3 @@
-> **Small update**: The infrastructure image was wrong and I had to redact text in the markdown docs. And there was an error in the terraform `main.tf` file. No other changes were made. You can check the [last commit](https://github.com/LoHertel/diplomats-in-germany/commits/main).
-
 # Diplomats in Germany
 
 The German ministry of foreign affairs (Auswärtiges Amt) regularly updates a list of all foreign diplomatic missions and their diplomats, which are accredited by the Federal Republic of Germany.
@@ -34,7 +32,7 @@ The following tools and technologies were used:
 - Data Warehouse - [**BigQuery**](https://cloud.google.com/bigquery)
 - Data Visualization - [**Data Studio**](https://datastudio.google.com/overview)
 
-![infrastructure diagram](https://www.lorenz-hertel.net/arch.jpg "Infrastructure")
+![infrastructure diagram](images/infrastructure.png "Infrastructure")
 
 ## Dashboard
 
@@ -42,18 +40,20 @@ Link to Report:
 https://datastudio.google.com/reporting/c67883ee-7b3a-481f-a28f-e001b0c3c743
 
 
-[![infrastructure diagram](https://www.lorenz-hertel.net/dashboard.png "Infrastructure")](https://datastudio.google.com/reporting/c67883ee-7b3a-481f-a28f-e001b0c3c743)
+[![Dashboard](images/dashboard.png "Dashboard")](https://datastudio.google.com/reporting/c67883ee-7b3a-481f-a28f-e001b0c3c743)
 
 
 ## Run the Walkthrough Tutorial
 
-I have created interactive instructions to guide you through the setup process.
+**Pre-Requisite:** Create a free [GCP account](https://console.cloud.google.com/freetrial) if you do not have one. Note that GCP also offers [$300 free credits for 90 days](https://cloud.google.com/free/docs/gcp-free-tier/#free-trial).
+
+You can follow this interactive instructions as a guide through the setup process.
 
 [![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://console.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/LoHertel/diplomats-in-germany&cloudshell_tutorial=project-walkthrough.md)
 
-By clicking the button, the Google Cloud Shell Editor will open and ask for your authorization to clone this repository.  
+After clicking the button *Open in Google Cloud Shell*, the Google Cloud Shell Editor will open and ask for your authorization to clone this repository. 
 The interactive walkthrough for the project will be displayed on the right side of the Cloud Shell Editor.  
-*There might be an error message showing up, that third party cookies are needed. You can allow third party cookies for the Cloud Shell Editor. For [more information see here](https://cloud.google.com/code/docs/shell/limitations#private_browsing_and_disabled_third-party_cookies).*
+*Note: There might be an error message showing up, that third party cookies are needed. You can allow third party cookies for the Cloud Shell Editor. For [more information see here](https://cloud.google.com/code/docs/shell/limitations#private_browsing_and_disabled_third-party_cookies).*
 
 > ***Note:** If you have closed the walkthrough and want to reopen it, run the following command in the cloudshell terminal window:*
 > ```sh
@@ -62,6 +62,25 @@ The interactive walkthrough for the project will be displayed on the right side 
 
 If you don't want to use Cloud Shell Editor you could go through the instructions manually: [Open Instructions](project-walkthrough.md)
 
+## Further Improvement
+* Setup
+    * create shell script for VM setup and integrate it in Terraform (also make [SSH key creation](https://cloud.google.com/compute/docs/connect/create-ssh-keys#create_an_ssh_key_pair) more robust or use Google service account auth method to connect to VM)
+    * create project specific IAM role for Terraform and assign it to the service account instead of granting the permissions directly
+    * limit permissions to the minimal necessary set
+    * Create an additional service account for running the data pipeline (currently the Terraform user with a lot of permissions is used)
+    * integrate cloudbuild for CI / CD
+    * add tests for CI
+* Airflow
+    * create DAG for initial load
+    * find out why XCOM doesn't work with task groups in Airflow
+    * use Cloud Composer instead of Compute Engine VM
+* dbt
+    * add business data vault 
+* Data Studio
+    * remove calculated fields from Data Studio report and precalculate this data in the datamart (otherwise we can not use the report as template and change the data sources)
+    * compare differences between two report dates
+* spell checking
+
 
 ## Special Mentions
-I'd like to thank the [DataTalks.Club](https://datatalks.club) for offering this Data Engineering course for completely free. All the things I learnt there, enabled me to come up with this project. If you want to upskill on Data Engineering technologies, please check out the [course](https://github.com/DataTalksClub/data-engineering-zoomcamp). :)
+I'd like to thank the [DataTalks.Club](https://datatalks.club) for offering this Data Engineering course completely free. If you want to upskill on Data Engineering technologies, please check out their self-paced [course](https://github.com/DataTalksClub/data-engineering-zoomcamp). :)
