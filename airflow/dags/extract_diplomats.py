@@ -244,9 +244,9 @@ class ExtractDiplomats():
 if __name__ == "__main__":
     
     for file in os.listdir("pdf"):
-        if file.endswith("vertretungenfremderstaatendl-data.pdf"):
+        if file.endswith("_data.pdf"):
             print(os.path.join("pdf", file))
 
             pdf = ExtractDiplomats(os.path.join("pdf", file))
             #pdf.to_csv('export.csv')
-            pdf.to_parquet(date_subdirectory=True)
+            pdf.to_parquet('data', date_subdirectory=True)

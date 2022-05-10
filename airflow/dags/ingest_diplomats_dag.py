@@ -98,10 +98,10 @@ with DAG(
     default_args=default_args,
     catchup=False,
     max_active_runs=1,
-    is_paused_upon_creation=True,
+    is_paused_upon_creation=False,
 ) as dag:
 
-    with TaskGroup(group_id='Extract') as extract_group:
+    #with TaskGroup(group_id='Extract') as extract_group:
 
         download_pdf_task = BashOperator(
             task_id='download_pdf',
@@ -130,14 +130,15 @@ with DAG(
             python_callable=extract_data,
             op_kwargs={
                 "pdf_file": TARGET_FILE,
-                "target_folder": os.path.join(AIRFLOW_HOME, "data")
+                "target_folder": os.path.join(AIRFLOW_HOME, "data"),
+                "test": "{{ ti.xcom_pull(task_ids='check_download', key='pdf_date') }}"
             },
         )
 
-        download_pdf_task >> check_download_task >> extract_data_task
+        #download_pdf_task >> check_download_task >> extract_data_task
 
 
-    with TaskGroup(group_id='Load') as load_group:
+    #with TaskGroup(group_id='Load') as load_group:
 
         upload_pdf_to_gcs_task = LocalFilesystemToGCSOperator(
             task_id="upload_pdf_to_gcs",
@@ -165,16 +166,17 @@ with DAG(
             write_disposition="WRITE_TRUNCATE",
         )
 
-        upload_pq_to_gcs_task >> load_data_to_bq_task
+        #upload_pq_to_gcs_task >> load_data_to_bq_task
 
 
-    with TaskGroup(group_id='Transform') as transform_group:
+    #with TaskGroup(group_id='Transform') as transform_group:
 
         dbt_run_task = BashOperator(
             task_id="dbt_run",
             do_xcom_push=False,
-            bash_command=f"cd {os.path.join(AIRFLOW_HOME, 'dbt')} && dbt run",
+            bash_command=f"cd {os.path.join(AIRFLOW_HOME, 'dbt')} && dbt seed && dbt run",
         )
     
 
-    extract_group >> load_group >>  transform_group
+    #extract_group >> load_group >>  transform_group
+        download_pdf_task >> check_download_task >> extract_data_task >> [upload_pdf_to_gcs_task, upload_pq_to_gcs_task] >> load_data_to_bq_task >> dbt_run_task
