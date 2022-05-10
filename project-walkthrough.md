@@ -20,7 +20,7 @@ The septup will have the following steps:
 
 It costs approx. $1 credit to run the project for an hour.
 
-> ***Note:** If you have closed this instrunctions pane and want to reopen it, run the following command in the Cloud Shell terminal window:*
+> ***Note:** If you have closed this instructions pane and want to reopen it, run the following command in the Cloud Shell terminal window:*
 > ```sh
 > cloudshell launch-tutorial project-walkthrough.md
 > ```
@@ -43,7 +43,7 @@ Proceed with <u>one</u> of both.
 > ***Tip:** If you have opened the instructions in Google Cloud Shell, you could click on the grey Cloud Shell icon <walkthrough-cloud-shell-icon></walkthrough-cloud-shell-icon> at the top right corner of the shell command to transfer the code to the Cloud Shell terminal window, then press enter in the terminal window to execute the command.*
 &nbsp; 
 
-Generate a name for your project with a random id:
+1. Generate a name for your project with a random id:
 ```sh
 PROJECT_ID="diplomats-in-germany-$(shuf -i 100000-999999 -n 1)"
 ```
@@ -136,11 +136,11 @@ GOOGLE_CLOUD_ZONE=$(gcloud config get compute/zone)
 ```
 
 &nbsp;  
-Click **Next** to configure a service account for Terraform and store the full account name in a variable for further use.
+Click **Next** to configure a service account for Terraform.
 
 ## 4. Create Service Account for Terraform
 
-**Create service account** for Terraform:
+**Create service account** for Terraform and store the full account name in a variable for further use:
 ```sh
 gcloud iam service-accounts create svc-terraform --display-name="Terraform Service Account" --project=$GOOGLE_CLOUD_PROJECT
 
@@ -163,7 +163,7 @@ gcloud projects add-iam-policy-binding $GOOGLE_CLOUD_PROJECT --member="serviceAc
 ```
 &nbsp;  
 
-Create **API keys** and save them at `credentials/terraform-gcp-key.json` in Google Cloud Shell:
+Create **API keys** and save them in `credentials/terraform-gcp-key.json` in Google Cloud Shell:
 ```sh
 gcloud iam service-accounts keys create credentials/terraform-gcp-key.json --iam-account=$GCP_SA_MAIL
 ```
@@ -180,9 +180,14 @@ Click **Next** to start creating the cloud infrastructure.
 ### Create bucket for the Terraform state file. 
 It is a [good practice](https://www.terraform.io/language/state/remote) to store the Terraform state file on a remote storage, in order to version the state description of the infrastructure, to prevent data loss and to give other members of a team the opportunity to change the infrastructure as well. 
 
+Set a name for the bucket, in which the Terraform remote state file will be stored:
+```sh
+TF_BUCKET_NAME = "$GOOGLE_CLOUD_PROJECT-tf-state"
+```
+
 Execute the following command to create a bucket for the Terraform remote state file:
 ```sh
-gsutil mb -p $GOOGLE_CLOUD_PROJECT -c STANDARD -l $GOOGLE_CLOUD_REGION gs://$GOOGLE_CLOUD_PROJECT-tf-state
+gsutil mb -p $GOOGLE_CLOUD_PROJECT -c STANDARD -l $GOOGLE_CLOUD_REGION gs://$TF_BUCKET_NAME
 ```
 &nbsp;  
 
@@ -208,7 +213,7 @@ ssh-keygen -f ~/.ssh/id_rsa -N ""
 
 Initialize the remote state file (.tfstate):
 ```sh
-terraform init -backend-config="bucket=$GOOGLE_CLOUD_PROJECT-tf-state"
+terraform init -backend-config="bucket=$TF_BUCKET_NAME"
 ```
 &nbsp; 
 
@@ -237,7 +242,7 @@ IP_ADDRESS="$(gcloud compute instances describe airflow-host --format='get(netwo
 ```
 &nbsp; 
 
-Insert current **project settings** in environment file `.env` and fix bug:
+Insert current **project settings** in environment file `.env`:
 ```sh
 cp ../airflow/template.env ../airflow/.env
 
@@ -246,15 +251,6 @@ sed -i "s/^\(GCP_PROJECT_ID=\).*$/\1$GOOGLE_CLOUD_PROJECT/gm" ../airflow/.env
 sed -i "s/^\(GCP_GCS_BUCKET=\).*$/\1$GOOGLE_CLOUD_PROJECT-$GOOGLE_CLOUD_REGION-data-lake/gm" ../airflow/.env
 
 sed -i "s/^\(GCP_LOCATION=\).*$/\1$GOOGLE_CLOUD_REGION/gm" ../airflow/.env
-
-sed -i '104s/.*//' ../airflow/dags/ingest_diplomats_dag.py
-sed -i '137s/.*//' ../airflow/dags/ingest_diplomats_dag.py
-sed -i '140s/.*//' ../airflow/dags/ingest_diplomats_dag.py
-sed -i '168s/.*//' ../airflow/dags/ingest_diplomats_dag.py
-sed -i '171s/.*//' ../airflow/dags/ingest_diplomats_dag.py
-sed -i '176s/&&/\&\& dbt seed \&\&/' ../airflow/dags/ingest_diplomats_dag.py
-sed -i '180s/.*/        download_pdf_task >> check_download_task >> extract_data_task >> [upload_pdf_to_gcs_task, upload_pq_to_gcs_task] >> load_data_to_bq_task >> dbt_run_task/' ../airflow/dags/ingest_diplomats_dag.py
-sed -i '8s/.*/          identifier: diplomats/' ../dbt/models/staging/model.yml
 ```
 &nbsp; 
 
@@ -326,17 +322,17 @@ docker exec -it diplomats-airflow-scheduler-1 bash
 ```
 &nbsp; 
 
-**Start dag** by unpause it:
+**Start dag** by unpausing it:
 ```sh
 airflow dags unpause ingest_diplomats_dag
 ```
 &nbsp;  
 
-Use this command to **see the dag status**, whether the run has finished already: *(you might need to run it several times until the dag is completed)*
+Use this command to **see the dag's current status**: *(you might need to wait a bit until the dag is completed and refresh the command to see the new status)*
 ```sh 
 airflow tasks states-for-dag-run ingest_diplomats_dag $(date -d "yesterday" '+%Y-%m-%d') 
 ```
-If the state of every task in the dag is `success`, the run is completed. The dag is sheduled to run daily and will check, whether a new version of the PDF list wih diplomats was published online. If a new version is found, the data will be extracted, versioned and added to the BigQuery tables.
+If the state of every task in the dag shows `success`, the run is completed. The dag is sheduled to run daily and will check, whether a new version of the PDF list with diplomats was published online. If a new version is found, the data will be extracted, versioned and added to the BigQuery tables.
 &nbsp;  
 
 **Close the connection** to the airflow sheduler container and return to the airflow host:
@@ -364,7 +360,7 @@ bq ls --max_results 10 "$GOOGLE_CLOUD_PROJECT:datamart"
 **Open the Report** using the following link to see how many diplomats from other countries are acredited in Germany at the moment, how many of them are male and female and how long are they staying on post on average: 
 [https://datastudio.google.com/reporting/c67883ee-7b3a-481f-a28f-e001b0c3c743](https://datastudio.google.com/reporting/c67883ee-7b3a-481f-a28f-e001b0c3c743)
 
-[![infrastructure diagram](https://www.lorenz-hertel.net/dashboard.png "Infrastructure")](https://datastudio.google.com/reporting/c67883ee-7b3a-481f-a28f-e001b0c3c743)
+[![Report](https://www.lorenz-hertel.net/dashboard.png "Report")](https://datastudio.google.com/reporting/c67883ee-7b3a-481f-a28f-e001b0c3c743)
 
 You went through the setup, ran the data pipeline and have seen the result.
 
